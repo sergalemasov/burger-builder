@@ -3,11 +3,18 @@ import BurgerIngredient from './BurgerIngredient/BurgerIngredient';
 import classes from './Burger.module.css';
 import BurgerIngredientType from 'shared/enums/BurgerIngredientType.enum';
 
-const burger = (props: {ingredients: Record<string, number>}) => {
+interface BurgerProps {
+    ingredients: Record<string, number>;
+}
+
+const burger: React.FC<BurgerProps> = props => {
     const ingredientComponents = Object.keys(props.ingredients)
         .reduce<JSX.Element[]>(
             (components, ingredientName) => components.concat([...Array(props.ingredients[ingredientName])]
-                .map((_, i) => <BurgerIngredient type={ingredientName} key={`${ingredientName}${i}`}/>)
+                .map((_, i) => <BurgerIngredient
+                    type={ingredientName as BurgerIngredientType}
+                    key={`${ingredientName}${i}`}/>
+                )
             ),
             []
         );

@@ -7,8 +7,9 @@ import BuildControl from './BuildControl/BuildControl';
 interface BuildControlsProps {
     ingredientAdded: (type: BurgerIngredientType) => void;
     ingredientRemoved: (type: BurgerIngredientType) => void;
+    ordered: () => void;
     ingredients: Record<string, number>;
-    totalPrice: number;
+    totalPrice: string;
 }
 
 const controls: {type: BurgerIngredientType, label: string}[] = [
@@ -30,7 +31,7 @@ const controls: {type: BurgerIngredientType, label: string}[] = [
     }
 ];
 
-const buildControls = (props: BuildControlsProps) => {
+const buildControls: React.FC<BuildControlsProps> = props => {
     const isPurchasable = Object.values(props.ingredients)
         .some(value => !!value);
 
@@ -48,7 +49,8 @@ const buildControls = (props: BuildControlsProps) => {
             ))}
             <button
                 disabled={!isPurchasable}
-                className={classes.OrderButton}>
+                className={classes.OrderButton}
+                onClick={props.ordered}>
                 ORDER NOW
             </button>
         </div>

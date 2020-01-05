@@ -2,7 +2,11 @@ import React from 'react';
 import classes from './BurgerIngredient.module.css';
 import BurgerIngredientType from 'shared/enums/BurgerIngredientType.enum';
 
-const burgerIngredient = (props: {type: string}) => {
+interface BurgerIngredientProps {
+    type: BurgerIngredientType;
+}
+
+const burgerIngredient: React.FC<BurgerIngredientProps> = props => {
     let ingredient: JSX.Element | null;
 
     switch (props.type) {

@@ -8,7 +8,7 @@ interface BuildControlProps {
     ingredientRemoved: () => void;
 }
 
-const buildControl = (props: BuildControlProps) => (
+const buildControl: React.FC<BuildControlProps> = props => (
     <div className={classes.BuildControl}>
         <div className={classes.Label}>{props.label}</div>
         <button

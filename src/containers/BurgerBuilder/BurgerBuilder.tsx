@@ -1,7 +1,9 @@
 import React, {Component, Fragment} from 'react';
 import Burger from 'components/Burger/Burger';
 import BurgerIngredientType from 'shared/enums/BurgerIngredientType.enum';
-import BuildControls from 'components/BuildControls/BuildControls';
+import BuildControls from 'components/Burger/BuildControls/BuildControls';
+import Modal from 'components/UI/Modal/Modal';
+import OrderSummary from 'components/Burger/OrderSummary/OrderSummary';
 
 const INGREDIENT_PRICES: Record<string, number> = {
     [BurgerIngredientType.salad]: 0.5,
@@ -13,6 +15,7 @@ const INGREDIENT_PRICES: Record<string, number> = {
 interface BurgerBuilderState {
     ingredients: Record<string, number>;
     totalPrice: number;
+    isPurchasing: boolean;
 };
 
 class BurgerBuilder extends Component {
@@ -23,11 +26,12 @@ class BurgerBuilder extends Component {
             [BurgerIngredientType.cheese]: 0,
             [BurgerIngredientType.meat]: 0,
         },
-        totalPrice: 0
+        totalPrice: 0,
+        isPurchasing: false
     };
 
-    static toFixed2(value: number): number {
-        return +(value).toFixed(2);
+    static fixFloat(value: number): number {
+        return +(value).toFixed(1);
     }
 
     addIngredientHandler = (type: BurgerIngredientType) => {
@@ -40,7 +44,7 @@ class BurgerBuilder extends Component {
                     ...prevState.ingredients,
                     [type]: updatedCount
                 },
-                totalPrice: BurgerBuilder.toFixed2(prevState.totalPrice + priceAddition)
+                totalPrice: BurgerBuilder.fixFloat(prevState.totalPrice + priceAddition)
             };
         });
     }
@@ -59,17 +63,40 @@ class BurgerBuilder extends Component {
                     ...prevState.ingredients,
                     [type]: updatedCount
                 },
-                totalPrice: BurgerBuilder.toFixed2(prevState.totalPrice - priceSubstraction)
+                totalPrice: BurgerBuilder.fixFloat(prevState.totalPrice - priceSubstraction)
             };
         });
     }
 
+    purchaseHandler = () => {
+        this.setState({isPurchasing: true});
+    }
+
+    purchaseCancelHandler = () => {
+        this.setState({isPurchasing: false});
+    }
+
+    purchaseConfirmHandler = () => {
+
+    }
+
     render(): JSX.Element {
+        const stringifiedTotalPrice = this.state.totalPrice.toFixed(2);
+
         return (
             <Fragment>
+                <Modal isVisible={this.state.isPurchasing} backdropClicked={this.purchaseCancelHandler}>
+                    <OrderSummary
+                        cancelClicked={this.purchaseCancelHandler}
+                        continueClicked={this.purchaseConfirmHandler}
+                        ingredients={this.state.ingredients}
+                        totalPrice={stringifiedTotalPrice}
+                    ></OrderSummary>
+                </Modal>
                 <Burger ingredients={this.state.ingredients}/>
                 <BuildControls
-                    totalPrice={this.state.totalPrice}
+                    ordered={this.purchaseHandler}
+                    totalPrice={stringifiedTotalPrice}
                     ingredients={this.state.ingredients}
                     ingredientAdded={this.addIngredientHandler}
                     ingredientRemoved={this.removeIngredientHandler}
