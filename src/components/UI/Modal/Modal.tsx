@@ -5,12 +5,13 @@ import Backdrop from '../Backdrop/Backdrop';
 interface ModalProps {
     children?: React.ReactNode;
     isVisible?: boolean;
-    backdropClicked: () => void
+    isOnTop?: boolean;
+    backdropClicked: () => void;
 }
 
 class Modal extends Component<ModalProps> {
     shouldComponentUpdate(nextProps: Readonly<ModalProps>): boolean {
-        return nextProps.isVisible !== this.props.isVisible;
+        return nextProps.isVisible !== this.props.isVisible || this.props.children !== nextProps.children;
     }
 
     render() {
@@ -22,8 +23,12 @@ class Modal extends Component<ModalProps> {
 
         return (
             <Fragment>
-                {this.props.isVisible ? <Backdrop clicked={this.props.backdropClicked} /> : null}
-                <div className={modalClasses.join(' ')}>
+                {this.props.isVisible
+                    ? <Backdrop
+                        clicked={this.props.backdropClicked}
+                        isOnTop={this.props.isOnTop}/>
+                    : null}
+                <div className={modalClasses.join(' ')} style={this.props.isOnTop ? {zIndex: 800} : undefined}>
                     {this.props.children}
                 </div>
             </Fragment>

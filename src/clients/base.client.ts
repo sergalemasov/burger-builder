@@ -1,12 +1,7 @@
-import axios, {AxiosInstance} from 'axios';
+import {AxiosInstance} from 'axios';
 
 export class BaseClient {
-    private axiosInstance: AxiosInstance;
-
-    constructor() {
-        this.axiosInstance = axios.create({
-            baseURL: 'https://burgerbuilder-acc5e.firebaseio.com/'
-        });
+    constructor(private axiosInstance: AxiosInstance) {
     }
 
     get<O>(url: string): Promise<O> {
