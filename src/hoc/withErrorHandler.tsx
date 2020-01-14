@@ -9,7 +9,7 @@ function withErrorHandler<T>(WrappedComponent: React.ComponentType<T>): React.FC
         useEffect(() => {
             const interceptorId = axiosInstance.interceptors.response.use(
                 response => response,
-                error => setError(error.message))
+                error => setError(error.message));
 
             return () => {
                 axiosInstance.interceptors.response.eject(interceptorId);

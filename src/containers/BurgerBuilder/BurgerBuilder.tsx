@@ -4,9 +4,11 @@ import BurgerIngredientType from 'shared/enums/BurgerIngredientType.enum';
 import BuildControls from 'components/Burger/BuildControls/BuildControls';
 import Modal from 'components/UI/Modal/Modal';
 import OrderSummary from 'components/Burger/OrderSummary/OrderSummary';
-import ordersClient from 'clients/orders.client';
 import Spinner from 'components/UI/Spinner/Spinner';
 import withErrorHandler from 'hoc/withErrorHandler';
+import {RouteComponentProps} from 'react-router-dom';
+import {Order} from 'shared/interfaces/order';
+import storageService from 'services/storageService';
 
 const INGREDIENT_PRICES: Record<string, number> = {
     [BurgerIngredientType.salad]: 0.5,
@@ -15,14 +17,12 @@ const INGREDIENT_PRICES: Record<string, number> = {
     [BurgerIngredientType.bacon]: 0.6
 };
 
-interface BurgerBuilderState {
-    ingredients: Record<string, number>;
-    totalPrice: number;
+interface BurgerBuilderState extends Order {
     isPurchasing: boolean;
     isLoading: boolean;
 };
 
-class BurgerBuilder extends Component {
+class BurgerBuilder extends Component<RouteComponentProps> {
     state: BurgerBuilderState = {
         ingredients: {
             [BurgerIngredientType.salad]: 0,
@@ -35,21 +35,16 @@ class BurgerBuilder extends Component {
         isLoading: false
     };
 
-    static fixFloat(value: number): number {
-        return +(value).toFixed(1);
+    componentDidMount() {
+        const order = storageService.restoreOrder();
+
+        if (order) {
+            this.setState(() => order);
+        }
     }
 
-    componentDidMount() {
-        let orderId = localStorage.getItem('currentOrderId');
-
-        if (!orderId) {
-            return;
-        }
-
-        ordersClient.getOrder(orderId)
-            .then(response => this.setState({ingredients: response.data}))
-            .catch(error => console.log(error))
-            .finally(() => this.setState({isLoading: false}));
+    static fixFloat(value: number): number {
+        return +(value).toFixed(1);
     }
 
     render(): JSX.Element {
@@ -84,37 +79,49 @@ class BurgerBuilder extends Component {
     }
 
     addIngredientHandler = (type: BurgerIngredientType) => {
-        this.setState((prevState: BurgerBuilderState) => {
-            const priceAddition = INGREDIENT_PRICES[type];
-            const updatedCount = prevState.ingredients[type] + 1;
+        this.setState(
+            (prevState: BurgerBuilderState) => {
+                const priceAddition = INGREDIENT_PRICES[type];
+                const updatedCount = prevState.ingredients[type] + 1;
 
-            return {
-                ingredients: {
-                    ...prevState.ingredients,
-                    [type]: updatedCount
-                },
-                totalPrice: BurgerBuilder.fixFloat(prevState.totalPrice + priceAddition)
-            };
-        });
+                return {
+                    ingredients: {
+                        ...prevState.ingredients,
+                        [type]: updatedCount
+                    },
+                    totalPrice: BurgerBuilder.fixFloat(prevState.totalPrice + priceAddition)
+                };
+            },
+            () => storageService.storeOrder({
+                ingredients: this.state.ingredients,
+                totalPrice: this.state.totalPrice
+            })
+        );
     }
 
     removeIngredientHandler = (type: BurgerIngredientType) => {
-        this.setState((prevState: BurgerBuilderState) => {
-            if (!prevState.ingredients[type]) {
-                return;
-            }
+        this.setState(
+            (prevState: BurgerBuilderState) => {
+                if (!prevState.ingredients[type]) {
+                    return;
+                }
 
-            const priceSubstraction = INGREDIENT_PRICES[type];
-            const updatedCount = prevState.ingredients[type] - 1;
+                const priceSubstraction = INGREDIENT_PRICES[type];
+                const updatedCount = prevState.ingredients[type] - 1;
 
-            return {
-                ingredients: {
-                    ...prevState.ingredients,
-                    [type]: updatedCount
-                },
-                totalPrice: BurgerBuilder.fixFloat(prevState.totalPrice - priceSubstraction)
-            };
-        });
+                return {
+                    ingredients: {
+                        ...prevState.ingredients,
+                        [type]: updatedCount
+                    },
+                    totalPrice: BurgerBuilder.fixFloat(prevState.totalPrice - priceSubstraction)
+                };
+            },
+            () => storageService.storeOrder({
+                ingredients: this.state.ingredients,
+                totalPrice: this.state.totalPrice
+            })
+        );
     }
 
     purchaseHandler = () => {
@@ -126,15 +133,12 @@ class BurgerBuilder extends Component {
     }
 
     purchaseConfirmHandler = () => {
-        this.setState({isLoading: true});
-
-        ordersClient.createOrder({
-            totalPrice: this.state.totalPrice,
-            ingredients: this.state.ingredients
-        })
-            .then(response => localStorage.setItem('currentOrderId', response.data.name))
-            .catch(error => console.log(error))
-            .finally(() => this.setState({isLoading: false}));
+        this.props.history.push('/checkout', {
+            orderState: {
+                ingredients: this.state.ingredients,
+                totalPrice: this.state.totalPrice
+            }
+        });
     }
 }
 

@@ -4,7 +4,7 @@ import ButtonType from 'shared/enums/ButtonType.enum';
 
 interface ButtonProps {
     children: React.ReactNode;
-    clicked: () => void;
+    clicked: (event: React.MouseEvent) => void;
     type?: ButtonType;
 }
 
